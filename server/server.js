@@ -2,11 +2,14 @@ var WebSocketServer = require('rpc-websockets').Server
 
 // instantiate Server and start listening for requests
 var server = new WebSocketServer({
-  port: 5050,
+  port: 7070,
   host: 'localhost'
 })
 
 let i = 0;
+
+let rooms = [];
+
 // register an RPC method
 server.register('sum', function(params) {
   console.log(params[0] + params[1])
@@ -19,12 +22,36 @@ server.register('sum', function(params) {
 server.register('hello', function(params) {
   // emit an event to subscribers
   console.log("world")
-
   return "world"
 })
 
 server.register("getdata", function(params) {
   return i;
+})
+
+server.register("getLobbyInfo", function(params) {
+  console.log("logged in, rooms: ", rooms);
+  return rooms;
+})
+
+server.register("createLobby", function(params) {
+  console.log("creating lobby: ", params);
+  const newRoom = {
+    roomTitle: params.lobbyTitle,
+    users: [
+      {
+        name: params.nameOfPlayer,
+        score: 0
+      }
+    ],
+    statusOfGame: "waiting",
+    wasAnswered: [],
+    amountOfPlayers: params.lobbyPlayersNum
+  }
+  rooms.push(newRoom);
+  console.log("new room: ", newRoom);
+  console.log("rooms: ", rooms);
+  return 123;
 })
 
 // server.register('sayHelloIfWorld', function(params) {
@@ -59,6 +86,7 @@ server.register("getdata", function(params) {
 //       },
 //     ],
 //     statusOfGame: "started",
-//     wasAnswered: []
+//     wasAnswered: [],
+//     amountOfPlayers: 3
 //   }
 // ]
