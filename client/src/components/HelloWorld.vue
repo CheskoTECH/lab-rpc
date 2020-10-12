@@ -1,9 +1,13 @@
 <template>
   <div>
-    <button @click="onClickButton">test</button>
-    <button @click="sayHelloIfWorld">hello world</button>
+    <!-- <button @click="onClickButton">test</button>
+    <button @click="sayHelloIfWorld">hello world</button> -->
     <div v-if="ifLogin">
       <p>Ваше имя: {{ nameOfPlayer }}</p>
+      <div v-if="inLobby">
+        <p>Вы в комнате: {{ gamesList[lobbyIndex].roomTitle }}</p>
+        <p>Игроков: {{ gamesList[lobbyIndex].users.length }}</p>
+      </div>
       <div v-if="!inLobby">
         <div>
           <input type="text" v-model="lobbyTitle" placeholder="Название" />
@@ -16,9 +20,14 @@
         </div>
         <button @click="getLobbyList">Обновить информацию</button>
         <div class="rooms">
-          <p v-for="(game, index) in gamesList" :key="index">
-            {{ game.roomTitle }}
-          </p>
+          <div
+            class="rooms-block"
+            v-for="(game, index) in gamesList"
+            :key="index"
+          >
+            <p>{{ game.roomTitle }}</p>
+            <button @click="joinRoom(index)">join</button>
+          </div>
         </div>
       </div>
     </div>
@@ -28,9 +37,6 @@
       <input type="text" placeholder="name" v-model="nameOfPlayer" />
       <button @click="getLobbyList">Войти в игру</button>
     </div>
-    <input type="text" name="" id="" v-model="test" />
-    <p>{{ test }}</p>
-    <button @click="logGamesList">log</button>
   </div>
 </template>
 
@@ -49,6 +55,7 @@ export default {
       lobbyPlayersNum: null,
       gamesList: [],
       test: null,
+      lobbyIndex: null,
     };
   },
   methods: {
@@ -99,20 +106,19 @@ export default {
       ws.on("open", () => {
         ws.call("getLobbyInfo")
           .then(function(result) {
-            console.log("res: ", result);
+            // console.log("res: ", result);
             return result;
           })
           .then((result) => {
-            console.log("resss: ", result);
-            console.log("this: ", this);
+            // console.log("resss: ", result);
+            // console.log("this: ", this);
             this.gamesList = result;
-            console.log("gamesList: ", this.gamesList);
+            // console.log("gamesList: ", this.gamesList);
           });
       });
-      console.log("gamesList2 :", this.gamesList);
+      // console.log("gamesList2 :", this.gamesList);
     },
     createLobby() {
-      let resTest;
       const ws = new WebSocket("ws://localhost:7070");
       const data = {
         lobbyTitle: this.lobbyTitle,
@@ -120,20 +126,35 @@ export default {
         lobbyPlayersNum: this.lobbyPlayersNum,
       };
       console.log("data for creating lobby: ", data);
-      ws.on("open", function() {
+      ws.on("open", () => {
         ws.call("createLobby", data)
-          .then(function(result) {
-            console.log("then");
+          .then((result) => {
+            // console.log("then");
             this.gamesList.push(data);
-            console.log(this.gamesList);
-            resTest = result;
+            // console.log(this.gamesList);
+
             console.log("resultOfCreating: ", result);
           })
           .catch((e) => {
             console.log(e);
           });
       });
-      console.log(resTest);
+    },
+    joinRoom(index) {
+      console.log(this.gamesList[index]);
+      this.lobbyIndex = index;
+      this.inLobby = true;
+
+      const ws = new WebSocket("ws://localhost:7070");
+      const data = {
+        nameOfPlayer: this.nameOfPlayer,
+        index: index,
+      };
+      ws.on("open", () => {
+        ws.call("joinRoom", data).then((result) => {
+          console.log(result);
+        });
+      });
     },
   },
   created() {
@@ -143,6 +164,22 @@ export default {
     // setInterval(() => {
     //   this.getDataInInterval()
     // }, 5000);
+
+    // console.log("created");
+    // setInterval(() => {
+    //   console.log("gamesList: ", this.gamesList);
+
+    //   this.getLobbyList();
+    // }, 1000);
   },
 };
 </script>
+
+<style>
+.rooms-block {
+  margin: 0 auto;
+  width: 200px;
+  padding: 1rem;
+  border: 1px solid red;
+}
+</style>
