@@ -33,7 +33,7 @@ server.register("getLobbyInfo", function (params) {
 });
 
 server.register("createLobby", function (params) {
-  console.log("creating lobby: ", params);
+  // console.log("creating lobby: ", params);
   const newRoom = {
     roomTitle: params.lobbyTitle,
     users: [],
@@ -42,22 +42,23 @@ server.register("createLobby", function (params) {
     amountOfPlayers: params.lobbyPlayersNum,
   };
   rooms.push(newRoom);
-  console.log("new room: ", newRoom);
-  console.log("rooms: ", rooms);
-  return 123;
-});
-
-server.register("joinRoom", function (params) {
-  rooms[params.index].users.push({
-    nameOfPlayer: params.nameOfPlayer,
-    score: 0,
-  });
-  console.log("xzxrooms: ", rooms[1].users);
-  // rooms.push(newRoom);
   // console.log("new room: ", newRoom);
   // console.log("rooms: ", rooms);
   return 123;
 });
+
+server.register("joinRoom", function (params) {
+  // console.log("users: ", rooms[params.index])
+  rooms[params.index].users.push({
+    nameOfPlayer: params.nameOfPlayer,
+    score: 0,
+  });
+  return 123;
+});
+
+// server.register("getRoomInfo", function(params) {
+//   return rooms[params.index];
+// });
 
 // server.register('sayHelloIfWorld', function(params) {
 //   console.log(params);

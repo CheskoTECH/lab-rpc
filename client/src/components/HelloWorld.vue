@@ -56,6 +56,7 @@ export default {
       gamesList: [],
       test: null,
       lobbyIndex: null,
+      choosedRoomInfo: null
     };
   },
   methods: {
@@ -86,19 +87,19 @@ export default {
           });
       });
     },
-    getDataInInterval() {
-      const ws = new WebSocket("ws://localhost:7070");
+    // getDataInInterval() {
+    //   const ws = new WebSocket("ws://localhost:7070");
 
-      ws.on("open", function() {
-        ws.call("getdata", { num: 5 })
-          .then(function(result) {
-            console.log("updated data: ", result);
-          })
-          .catch((e) => {
-            console.log(e);
-          });
-      });
-    },
+    //   ws.on("open", function() {
+    //     ws.call("getdata", { num: 5 })
+    //       .then(function(result) {
+    //         console.log("updated data: ", result);
+    //       })
+    //       .catch((e) => {
+    //         console.log(e);
+    //       });
+    //   });
+    // },
     getLobbyList() {
       this.ifLogin = true;
       console.log("login");
@@ -132,6 +133,16 @@ export default {
           });
       });
     },
+    getRoomInfo(index) {
+      const ws = new WebSocket("ws://localhost:7070");
+      console.log('index param: ', index);
+      ws.on("open", () => {
+        ws.call("getRoomInfo", index).then((result) => {
+          this.choosedRoomInfo = result;
+        });
+      });
+      console.log("choosedRoom: ", this.choosedRoomInfo);
+    },
     joinRoom(index) {
       console.log(this.gamesList[index]);
       this.lobbyIndex = index;
@@ -147,6 +158,10 @@ export default {
           console.log(result);
         });
       });
+
+      setInterval(() => {
+        this.getLobbyList();
+      }, 5000);
     },
   },
   created() {
