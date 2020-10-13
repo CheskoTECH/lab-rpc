@@ -106,17 +106,12 @@ export default {
       ws.on("open", () => {
         ws.call("getLobbyInfo")
           .then(function(result) {
-            // console.log("res: ", result);
             return result;
           })
           .then((result) => {
-            // console.log("resss: ", result);
-            // console.log("this: ", this);
             this.gamesList = result;
-            // console.log("gamesList: ", this.gamesList);
           });
       });
-      // console.log("gamesList2 :", this.gamesList);
     },
     createLobby() {
       const ws = new WebSocket("ws://localhost:7070");
@@ -129,10 +124,7 @@ export default {
       ws.on("open", () => {
         ws.call("createLobby", data)
           .then((result) => {
-            // console.log("then");
             this.gamesList.push(data);
-            // console.log(this.gamesList);
-
             console.log("resultOfCreating: ", result);
           })
           .catch((e) => {
