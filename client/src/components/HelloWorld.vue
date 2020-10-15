@@ -32,6 +32,12 @@
       </div>
     </div>
 
+    <div v-if="inGame">
+      <input type="text" placeholder="Введите город" v-model="city">
+      <button @click=addCity>Добавить город</button>
+      <p v-for="(onecity, index) in gamesList[lobbyIndex].wasAnswered" :key="index">{{ onecity }}</p>
+    </div>
+
     <div v-if="!ifLogin">
       <p>Имя игрока</p>
       <input type="text" placeholder="name" v-model="nameOfPlayer" />
@@ -42,6 +48,12 @@
 
 <script>
 const WebSocket = require("rpc-websockets").Client;
+
+const PORT = process.env.PORT || "127.0.0.1:7070";
+var HOST = location.origin.replace(/^http/, 'ws')
+// var ws = new WebSocket(HOST);
+
+import russia from '../assets/russia.json'
 
 export default {
   name: "HelloWorld",
@@ -56,16 +68,86 @@ export default {
       gamesList: [],
       test: null,
       lobbyIndex: null,
-      choosedRoomInfo: null
+      choosedRoomInfo: null,
+      cities: [],
+      city: null,
+      rusCities: russia,
+      shortRus: [
+        {
+          city: "Курск"
+        },
+        {
+          city: "Новосибирск"
+        },
+        {
+          city: "Москва"
+        },
+        {
+          city: "Абакан"
+        }
+      ]
     };
   },
   methods: {
+    addCity() {
+      let isValidCity = false;
+      this.shortRus.forEach((obj) => {
+        console.log("obj:", obj);
+        if(obj.city.toLowerCase() === this.city.toLowerCase()) {
+          // console.log(this.gamesList);
+          isValidCity = true;
+        }
+      })
+
+      if (!isValidCity) {
+        alert("неверный город")
+      } else {
+        const ws = new WebSocket(`${HOST}:${PORT}`);
+          const data = {
+            city: this.city,
+            nameOfPlayer: this.nameOfPlayer,
+            index: this.lobbyIndex
+          };
+          console.log("data for creating lobby: ", data);
+          ws.on("open", () => {
+            ws.call("addAnswer", data)
+              .then((result) => {
+                console.log("resultOfAdding: ", result);
+              })
+              .catch((e) => {
+                console.log(e);
+              });
+          });
+          this.city = "";
+      }
+      // console.log(this.rusCities.length);
+
+      // console.log(this.gamesList);
+
+      // const ws = new WebSocket(`${HOST}:${PORT}`);
+      // const data = {
+      //   city: this.city,
+      //   nameOfPlayer: this.nameOfPlayer,
+      //   index: this.lobbyIndex
+      // };
+      // console.log("data for creating lobby: ", data);
+      // ws.on("open", () => {
+      //   ws.call("addAnswer", data)
+      //     .then((result) => {
+      //       console.log("resultOfAdding: ", result);
+      //     })
+      //     .catch((e) => {
+      //       console.log(e);
+      //     });
+      // });
+      // this.city = "";
+    },
     logGamesList() {
       console.log(this.gamesList);
     },
     onClickButton() {
       this.gamesList = [{ roomTitle: "first" }, { roomTitle: "second" }];
-      // const ws = new WebSocket('ws://localhost:7070');
+      // const ws = new WebSocket(`${HOST}:${PORT}`);
       // ws.on('open', function() {
       //   // call an RPC method with parameters
       //   ws.call('sum', [5, 3]).then(function(result) {
@@ -75,7 +157,7 @@ export default {
       // ws.close()
     },
     sayHelloIfWorld() {
-      const ws = new WebSocket("ws://localhost:7070");
+      const ws = new WebSocket(`${HOST}:${PORT}`);
       ws.on("open", function() {
         ws.call("hello", { num: 5 })
           .then(function(result) {
@@ -88,7 +170,7 @@ export default {
       });
     },
     // getDataInInterval() {
-    //   const ws = new WebSocket("ws://localhost:7070");
+    //   const ws = new WebSocket(`${HOST}:${PORT}`);
 
     //   ws.on("open", function() {
     //     ws.call("getdata", { num: 5 })
@@ -103,7 +185,7 @@ export default {
     getLobbyList() {
       this.ifLogin = true;
       console.log("login");
-      const ws = new WebSocket("ws://localhost:7070");
+      const ws = new WebSocket(`${HOST}:${PORT}`);
       ws.on("open", () => {
         ws.call("getLobbyInfo")
           .then(function(result) {
@@ -113,9 +195,17 @@ export default {
             this.gamesList = result;
           });
       });
+      if (this.inLobby) {
+        let room = this.gamesList[this.lobbyIndex];
+        if (room.statusOfGame === "started") {
+          // alert("game started!")
+          this.inGame = true;
+        }
+        console.log(this.gamesList[this.lobbyIndex]);
+      }
     },
     createLobby() {
-      const ws = new WebSocket("ws://localhost:7070");
+      const ws = new WebSocket(`${HOST}:${PORT}`);
       const data = {
         lobbyTitle: this.lobbyTitle,
         nameOfPlayer: this.nameOfPlayer,
@@ -134,7 +224,7 @@ export default {
       });
     },
     getRoomInfo(index) {
-      const ws = new WebSocket("ws://localhost:7070");
+      const ws = new WebSocket(`${HOST}:${PORT}`);
       console.log('index param: ', index);
       ws.on("open", () => {
         ws.call("getRoomInfo", index).then((result) => {
@@ -148,7 +238,7 @@ export default {
       this.lobbyIndex = index;
       this.inLobby = true;
 
-      const ws = new WebSocket("ws://localhost:7070");
+      const ws = new WebSocket(`${HOST}:${PORT}`);
       const data = {
         nameOfPlayer: this.nameOfPlayer,
         index: index,

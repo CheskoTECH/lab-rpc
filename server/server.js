@@ -1,10 +1,17 @@
 var WebSocketServer = require("rpc-websockets").Server;
 
+const PORT = process.env.PORT || "7070";
+
+var express = require('express');
+var path = require('path');
+
 // instantiate Server and start listening for requests
 var server = new WebSocketServer({
-  port: 7070,
-  host: "localhost",
+  port: PORT,
+  host: '127.0.0.1',
 });
+
+// console.log("server: ", server);
 
 let i = 0;
 
@@ -28,7 +35,14 @@ server.register("getdata", function (params) {
 });
 
 server.register("getLobbyInfo", function (params) {
-  console.log("logged in, rooms: ", rooms);
+  // console.log("logged in, rooms: ", rooms);
+  rooms.forEach((room) => {
+    // console.log(room.amountOfPlayers, " ", room.users.length);
+    if (room.amountOfPlayers + "" === room.users.length + "") {
+      room.statusOfGame = "started"
+      // room.users[0].turn = true;
+    }
+  })
   return rooms;
 });
 
@@ -42,10 +56,20 @@ server.register("createLobby", function (params) {
     amountOfPlayers: params.lobbyPlayersNum,
   };
   rooms.push(newRoom);
-  // console.log("new room: ", newRoom);
+  console.log("new room: ", newRoom);
   // console.log("rooms: ", rooms);
   return 123;
 });
+
+server.register("addAnswer", function(params) {
+  console.log("params: ", params);
+  console.log(rooms[params.index]);
+  rooms[params.index].wasAnswered.push(params.city)
+  // сделать чтобы true в очереди следующему перевешивалась
+  // тогда клиент поймет как ходить
+  // и очки соперника можно выводить
+  // а валидация городов на клиенте
+})
 
 server.register("joinRoom", function (params) {
   // console.log("users: ", rooms[params.index])
@@ -55,6 +79,30 @@ server.register("joinRoom", function (params) {
   });
   return 123;
 });
+
+app = express();
+// app.use(express.static(__dirname + "/dist"));
+var hostname = '127.0.0.2';
+
+
+// Handle production
+if (process.env.NODE_ENV) {
+  // Static folder
+  app.use(express.static(__dirname + '/dist/'));
+  
+  // Handle SPA
+  app.get(/.*/, (req, res, next) =>{
+    res.sendFile(__dirname + '/dist/index.html');
+    next();
+  });
+}
+
+
+console.log(__dirname + "/dist");
+
+app.listen(PORT, hostname, () => {
+   console.log(`Server running at http://${hostname}:${PORT}/`);
+ });
 
 // server.register("getRoomInfo", function(params) {
 //   return rooms[params.index];
